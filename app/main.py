@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from app.db.base import Base
 from app.db.session import engine
 from app.users.routers import router as users_router
@@ -18,7 +19,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# sCORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,6 +27,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app)
+
 
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
@@ -38,4 +43,4 @@ async def root():
 if __name__ == "__main__":
     init_db()
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
