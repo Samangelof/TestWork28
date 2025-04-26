@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -8,10 +8,11 @@ from app.db.session import get_db
 from app.users import crud, models
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/login")
+bearer_scheme = HTTPBearer()
+
 
 async def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+    db: Session = Depends(get_db), token: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ) -> models.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -20,7 +21,7 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         user_id: str = payload.get("sub")
         if user_id is None:
@@ -31,6 +32,7 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
 
 async def get_current_active_user(
     current_user: models.User = Depends(get_current_user),

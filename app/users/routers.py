@@ -11,10 +11,12 @@ router = APIRouter(tags=["auth"])
 
 @router.post("/register", response_model=schemas.UserRead)
 def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+    """Регистрация"""
     return services.register_new_user(db, user_in)
 
 @router.post("/login", response_model=schemas.Token)
 def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
+    """Авторизация"""
     user = services.authenticate_user(db, user_in.email, user_in.password)
     if not user:
         raise HTTPException(status_code=401, detail="Неверные учетные данные")
@@ -23,6 +25,7 @@ def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/refresh", response_model=schemas.Token)
 def refresh(token_data: schemas.RefreshToken, db: Session = Depends(get_db)):
+    """Обновление токенов"""
     try:
         payload = jwt.decode(
             token_data.refresh_token, 

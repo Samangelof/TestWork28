@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base
 from app.db.session import engine
 from app.users.routers import router as users_router
+from app.tasks.routers import router as tasks_router
+
 
 
 def init_db():
@@ -26,8 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(users_router, prefix="/api/users", tags=["users"])
-# TODO: подключить tasks_router позже
-# app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
 
 @app.get("/")
 async def root():

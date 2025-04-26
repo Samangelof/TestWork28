@@ -1,28 +1,45 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from enum import Enum
 from pydantic import BaseModel
+
+
+class TaskStatus(str, Enum):
+    pending = "pending"
+    done = "done"
 
 
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    is_completed: Optional[bool] = False
+    status: TaskStatus = TaskStatus.pending
+    priority: int = 0
+
 
 class TaskCreate(TaskBase):
     pass
 
-class TaskUpdate(TaskBase):
+
+class TaskUpdate(BaseModel):
     title: Optional[str] = None
-    pass
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    priority: Optional[int] = None
+
 
 class TaskInDBBase(TaskBase):
     id: int
     owner_id: int
     created_at: datetime
-    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
 
+
 class Task(TaskInDBBase):
     pass
+
+
+class TaskSearchResults(BaseModel):
+    results: List[Task]
+    count: int
