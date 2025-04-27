@@ -15,6 +15,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
 
   app:
     build: .
@@ -29,7 +31,9 @@ services:
       - "8000:8000"
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy    
+    networks:
+      - backend
         
   promtail:
     image: grafana/promtail:latest
@@ -42,6 +46,9 @@ services:
       - ./promtail-config.yaml:/promtail/config.yml
     command: -config.file=/promtail/config.yml
     privileged: true
+    user: root
+    networks:
+      - backend
 
   prometheus:
     image: prom/prometheus:latest
@@ -51,6 +58,8 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheusdata:/prometheus
+    networks:
+      - backend
 
   grafana:
     image: grafana/grafana:latest
@@ -59,10 +68,12 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=root
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafanadata:/var/lib/grafana
+    networks:
+      - backend
 
   loki:
     image: grafana/loki:latest
@@ -72,10 +83,15 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/loki-config.yaml
     command: -config.file=/etc/loki/loki-config.yaml
-
+    networks:
+      - backend
 
 
 volumes:
   postgres_data:
   prometheusdata:
   grafanadata:
+
+networks:
+  backend:
+    driver: bridge
